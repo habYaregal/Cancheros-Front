@@ -3,9 +3,15 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
 import HomePage from "./pages/HomePage";
 import WeeklyPage from "./pages/WeeklyPage";
+import WeeklyArchivePage from "./pages/WeeklyArchivePage";
+import WeeklyGameweekPage from "./pages/WeeklyGameweekPage";
 import MonthlyPage from "./pages/MonthlyPage";
+import MonthlyArchivePage from "./pages/MonthlyArchivePage";
+import MonthlyMonthPage from "./pages/MonthlyMonthPage";
 import SeasonPage from "./pages/SeasonPage";
 import H2HPage from "./pages/H2HPage";
+import H2HArchivePage from "./pages/H2HArchivePage";
+import H2HGameweekPage from "./pages/H2HGameweekPage";
 import { RefreshProvider, useRefresh } from "./contexts/RefreshContext";
 import { getCurrentGameweek, getHealth } from "./api/client";
 
@@ -55,9 +61,15 @@ function AppShell() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/weekly" element={<WeeklyPage />} />
+        <Route path="/weekly/past" element={<WeeklyArchivePage />} />
+        <Route path="/weekly/gw/:gameweek" element={<WeeklyGameweekPage />} />
         <Route path="/monthly" element={<MonthlyPage />} />
+        <Route path="/monthly/past" element={<MonthlyArchivePage />} />
+        <Route path="/monthly/:monthId" element={<MonthlyMonthPage />} />
         <Route path="/season" element={<SeasonPage />} />
         <Route path="/h2h" element={<H2HPage />} />
+        <Route path="/h2h/past" element={<H2HArchivePage />} />
+        <Route path="/h2h/gw/:gameweek" element={<H2HGameweekPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>
