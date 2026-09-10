@@ -1,3 +1,5 @@
+import { useProfile } from "../contexts/ProfileContext";
+
 export function LoadingBlock({ label = "Loading…" }) {
   return (
     <div className="animate-pulse py-12 text-center text-sm text-muted sm:py-16">
@@ -28,6 +30,8 @@ export function SectionTitle({ title, subtitle }) {
 }
 
 export function StandingsTable({ rows, pointsKey = "points", showRecord = false }) {
+  const { memberId } = useProfile();
+
   if (!rows?.length) {
     return <p className="text-sm text-muted">No results yet.</p>;
   }
@@ -36,10 +40,15 @@ export function StandingsTable({ rows, pointsKey = "points", showRecord = false 
     <>
       {/* Mobile cards */}
       <div className="space-y-2 sm:hidden">
-        {rows.map((row, index) => (
+        {rows.map((row, index) => {
+          const isMe = memberId && row.memberId === memberId;
+          return (
           <div
             key={row.memberId || row.fplId || index}
-            className="flex items-center justify-between gap-3 border border-line bg-panel px-3 py-3"
+            className={[
+              "flex items-center justify-between gap-3 border bg-panel px-3 py-3",
+              isMe ? "border-lime/60 bg-lime/10" : "border-line",
+            ].join(" ")}
           >
             <div className="flex min-w-0 items-center gap-3">
               <span className="w-5 shrink-0 tabular-nums text-muted">
@@ -48,6 +57,11 @@ export function StandingsTable({ rows, pointsKey = "points", showRecord = false 
               <div className="min-w-0">
                 <p className="truncate font-semibold text-sand">
                   {row.firstName} {row.lastName}
+                  {isMe ? (
+                    <span className="ml-2 text-[10px] font-bold uppercase tracking-wider text-lime">
+                      You
+                    </span>
+                  ) : null}
                 </p>
                 <p className="truncate text-xs text-muted">{row.teamName}</p>
                 {showRecord ? (
@@ -61,7 +75,8 @@ export function StandingsTable({ rows, pointsKey = "points", showRecord = false 
               {row[pointsKey]}
             </span>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Desktop table */}
@@ -84,16 +99,26 @@ export function StandingsTable({ rows, pointsKey = "points", showRecord = false 
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, index) => (
+            {rows.map((row, index) => {
+              const isMe = memberId && row.memberId === memberId;
+              return (
               <tr
                 key={row.memberId || row.fplId || index}
-                className="border-b border-white/5 transition hover:bg-white/[0.03]"
+                className={[
+                  "border-b border-white/5 transition hover:bg-white/[0.03]",
+                  isMe ? "bg-lime/10" : "",
+                ].join(" ")}
               >
                 <td className="py-3 pr-3 tabular-nums text-muted">
                   {row.position ?? index + 1}
                 </td>
                 <td className="py-3 pr-3 font-semibold text-sand">
                   {row.firstName} {row.lastName}
+                  {isMe ? (
+                    <span className="ml-2 text-[10px] font-bold uppercase tracking-wider text-lime">
+                      You
+                    </span>
+                  ) : null}
                 </td>
                 <td className="py-3 pr-3 text-mist">{row.teamName}</td>
                 {showRecord ? (
@@ -108,7 +133,8 @@ export function StandingsTable({ rows, pointsKey = "points", showRecord = false 
                   {row[pointsKey]}
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>

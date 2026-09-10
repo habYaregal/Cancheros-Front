@@ -12,7 +12,11 @@ import SeasonPage from "./pages/SeasonPage";
 import H2HPage from "./pages/H2HPage";
 import H2HArchivePage from "./pages/H2HArchivePage";
 import H2HGameweekPage from "./pages/H2HGameweekPage";
+import ProfilePage from "./pages/ProfilePage";
+import RegisterPage from "./pages/RegisterPage";
 import { RefreshProvider, useRefresh } from "./contexts/RefreshContext";
+import { TelegramProvider } from "./contexts/TelegramContext";
+import { ProfileProvider } from "./contexts/ProfileContext";
 import { getCurrentGameweek, getHealth } from "./api/client";
 
 function AppShell() {
@@ -70,6 +74,8 @@ function AppShell() {
         <Route path="/h2h" element={<H2HPage />} />
         <Route path="/h2h/past" element={<H2HArchivePage />} />
         <Route path="/h2h/gw/:gameweek" element={<H2HGameweekPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/register" element={<RegisterPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>
@@ -79,7 +85,11 @@ function AppShell() {
 export default function App() {
   return (
     <RefreshProvider>
-      <AppShell />
+      <TelegramProvider>
+        <ProfileProvider>
+          <AppShell />
+        </ProfileProvider>
+      </TelegramProvider>
     </RefreshProvider>
   );
 }

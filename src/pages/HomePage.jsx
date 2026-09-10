@@ -37,7 +37,7 @@ export default function HomePage() {
 
   return (
     <div className="space-y-8 sm:space-y-12">
-      <section className="relative overflow-hidden border border-line bg-panel px-4 py-8 sm:px-10 sm:py-14">
+      <section className="relative overflow-hidden border border-line bg-panel px-4 py-6 sm:px-10 sm:py-14">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(184,242,58,0.12),transparent_45%)]" />
         <div className="relative">
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-lime sm:text-xs sm:tracking-[0.28em]">
