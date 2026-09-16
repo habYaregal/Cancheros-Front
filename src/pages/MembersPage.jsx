@@ -2,6 +2,7 @@ import { useLiveData } from "../hooks/useLiveData";
 import { getRegisteredMembers } from "../api/client";
 import { useProfile } from "../contexts/ProfileContext";
 import { ErrorBlock, LoadingBlock, SectionTitle } from "../components/ui";
+import { haptic, openLink } from "../lib/telegram";
 
 export default function MembersPage() {
   const { memberId } = useProfile();
@@ -19,6 +20,13 @@ export default function MembersPage() {
 
   const { members } = data;
 
+  const openMemberFpl = (member) => {
+    haptic("selection");
+    openLink(`https://fantasy.premierleague.com/entry/${member.fplId}`, {
+      tryInstantView: true,
+    });
+  };
+
   return (
     <div>
       <SectionTitle
@@ -28,8 +36,7 @@ export default function MembersPage() {
 
       {members.length === 0 ? (
         <div className="border border-line bg-panel px-4 py-5 text-sm text-mist">
-          No members have registered yet. Open the bot and send /register
-          <FPL_ID> to link your team.
+          No members have registered yet. Open the bot and send /register to link your team.
         </div>
       ) : (
         <div className="space-y-2">
@@ -40,11 +47,13 @@ export default function MembersPage() {
               .join(" ");
 
             return (
-              <div
+              <button
+                type="button"
                 key={member.telegramUserId}
+                onClick={() => openMemberFpl(member)}
                 className={[
-                  "flex items-center justify-between gap-3 border bg-panel px-3 py-3",
-                  isMe ? "border-lime/60 bg-lime/10" : "border-line",
+                  "flex w-full items-center justify-between gap-3 border bg-panel px-3 py-3 text-left transition active:scale-[0.995]",
+                  isMe ? "border-lime/60 bg-lime/10" : "border-line hover:border-lime/30",
                 ].join(" ")}
               >
                 <div className="flex min-w-0 items-center gap-3">
@@ -74,10 +83,10 @@ export default function MembersPage() {
                     </p>
                   </div>
                 </div>
-                <span className="shrink-0 text-xs tabular-nums text-muted">
-                  FPL #{member.fplId}
+                <span className="shrink-0 text-xs tabular-nums text-muted transition group-hover:text-lime">
+                  FPL #{member.fplId} →
                 </span>
-              </div>
+              </button>
             );
           })}
         </div>

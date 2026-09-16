@@ -1,15 +1,23 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
+  getColorScheme,
   getTelegramWebApp,
+  getThemeParams,
   initTelegram,
   isTelegramMiniApp,
+  safeAreaInsets,
+  useSettingsButton,
 } from "../lib/telegram";
 
 const TelegramContext = createContext({
   webApp: null,
   isTelegram: false,
   user: null,
+  colorScheme: "dark",
+  themeParams: {},
+  safeArea: { top: 0, right: 0, bottom: 0, left: 0 },
+  openProfile: () => {},
 });
 
 function parentPath(pathname) {
@@ -31,10 +39,43 @@ export function TelegramProvider({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [webApp, setWebApp] = useState(() => getTelegramWebApp());
+  const [colorScheme, setColorScheme] = useState(() => getColorScheme());
+  const [themeParams, setThemeParams] = useState(() => getThemeParams());
+  const [safeArea, setSafeArea] = useState(() => safeAreaInsets());
 
   useEffect(() => {
-    setWebApp(initTelegram() ?? getTelegramWebApp());
+    const tg = initTelegram() ?? getTelegramWebApp();
+    setWebApp(tg);
+    if (tg) {
+      setColorScheme(getColorScheme());
+      setThemeParams(getThemeParams());
+      setSafeArea(safeAreaInsets());
+      if (tg.onEvent) {
+        try {
+          tg.onEvent("themeChanged", () => {
+            setColorScheme(getColorScheme());
+            setThemeParams(getThemeParams());
+          });
+          tg.onEvent("viewportChanged", () => {
+            setSafeArea(safeAreaInsets());
+          });
+        } catch {
+        }
+      }
+    }
   }, []);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (colorScheme === "light") root.classList.add("tma-light");
+    else root.classList.remove("tma-light");
+
+    const sa = safeArea;
+    root.style.setProperty("--tma-safe-top", `${sa.top}px`);
+    root.style.setProperty("--tma-safe-right", `${sa.right}px`);
+    root.style.setProperty("--tma-safe-bottom", `${sa.bottom}px`);
+    root.style.setProperty("--tma-safe-left", `${sa.left}px`);
+  }, [colorScheme, safeArea]);
 
   useEffect(() => {
     const back = webApp?.BackButton;
@@ -53,13 +94,27 @@ export function TelegramProvider({ children }) {
     };
   }, [webApp, location.pathname, navigate]);
 
+  const openProfile = useCallback(() => {
+    navigate("/profile");
+  }, [navigate]);
+
+  useEffect(() => {
+    const { show } = useSettingsButton(openProfile);
+    const inApp = isTelegramMiniApp();
+    if (inApp) show();
+  }, [openProfile]);
+
   const value = useMemo(
     () => ({
       webApp,
       isTelegram: isTelegramMiniApp(),
       user: webApp?.initDataUnsafe?.user ?? null,
+      colorScheme,
+      themeParams,
+      safeArea,
+      openProfile,
     }),
-    [webApp]
+    [webApp, colorScheme, themeParams, safeArea, openProfile]
   );
 
   return (

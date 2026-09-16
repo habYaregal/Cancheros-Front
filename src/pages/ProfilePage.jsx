@@ -1,12 +1,36 @@
-import { Link } from "react-router-dom";
+import { useEffect, useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useProfile } from "../contexts/ProfileContext";
 import { useTelegram } from "../contexts/TelegramContext";
 import { formatPoints } from "../lib/format";
 import { ErrorBlock, LoadingBlock, SectionTitle } from "../components/ui";
+import {
+  haptic,
+  openLink,
+  useMainButton,
+} from "../lib/telegram";
 
 export default function ProfilePage() {
   const { isTelegram, user } = useTelegram();
-  const { me, loading, linked } = useProfile();
+  const { me, loading, linked, refreshMe } = useProfile();
+  const navigate = useNavigate();
+  const mainButton = useMemo(() => useMainButton(), []);
+
+  useEffect(() => {
+    if (!isTelegram) {
+      mainButton.hide();
+      return;
+    }
+    if (linked) {
+      mainButton.hide();
+      return;
+    }
+    mainButton.show("Register with FPL ID", () => {
+      haptic("selection");
+      navigate("/register");
+    });
+    return () => mainButton.hide();
+  }, [isTelegram, linked, mainButton, navigate]);
 
   if (!isTelegram) {
     return (
@@ -34,18 +58,35 @@ export default function ProfilePage() {
           title={`Hey ${name}`}
           subtitle="Link your FPL team to highlight your rows and unlock your personal dashboard."
         />
-        <Link
-          to="/register"
-          className="inline-flex bg-lime px-4 py-2.5 text-sm font-bold text-pitch"
-        >
-          Register with FPL ID
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            to="/register"
+            onClick={() => haptic("selection")}
+            className="inline-flex bg-lime px-4 py-2.5 text-sm font-bold text-pitch sm:hidden"
+          >
+            Register with FPL ID
+          </Link>
+          <button
+            type="button"
+            onClick={() => {
+              haptic("medium");
+              void refreshMe().then(() => haptic("success"));
+            }}
+            className="inline-flex border border-line bg-panel px-4 py-2.5 text-sm font-bold text-mist transition hover:border-lime/50 hover:text-lime"
+          >
+            Refresh
+          </button>
+        </div>
+        <p className="mt-3 text-xs text-muted sm:hidden">
+          Or tap the green Register button at the bottom of the screen.
+        </p>
       </div>
     );
   }
 
   const { telegram, member, snapshot } = me;
   const displayName = [member.firstName, member.lastName].filter(Boolean).join(" ");
+  const fplUrl = `https://fantasy.premierleague.com/entry/${member.fplId}`;
 
   return (
     <div className="space-y-6">
@@ -61,13 +102,22 @@ export default function ProfilePage() {
             {(telegram.firstName || member.firstName || "?").slice(0, 1)}
           </div>
         )}
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="font-display text-2xl leading-none text-sand">
             {displayName || telegram.firstName}
           </p>
           <p className="mt-1 truncate text-sm text-mist">{member.teamName}</p>
           <p className="text-xs text-muted">
-            FPL #{member.fplId}
+            <button
+              type="button"
+              onClick={() => {
+                haptic("selection");
+                openLink(fplUrl, { tryInstantView: true });
+              }}
+              className="underline decoration-dotted underline-offset-2 hover:text-lime"
+            >
+              FPL #{member.fplId}
+            </button>
             {telegram.username ? ` · @${telegram.username}` : ""}
           </p>
         </div>
@@ -121,7 +171,10 @@ export default function ProfilePage() {
 
 function StatCard({ label, value, detail }) {
   return (
-    <div className="border border-line bg-panel px-4 py-3">
+    <div
+      className="border border-line bg-panel px-4 py-3"
+      onClick={() => haptic("selection")}
+    >
       <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">
         {label}
       </p>
