@@ -147,10 +147,18 @@ export default function H2HPage() {
       </section>
 
       <section>
-        <h3 className="mb-4 text-xs font-semibold uppercase tracking-[0.22em] text-muted">
-          Table
-        </h3>
-        <StandingsTable rows={standings.standings} showRecord />
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-muted">
+            Table
+          </h3>
+          <p className="max-w-md text-[11px] text-muted leading-relaxed">
+            <span className="font-semibold text-sand">Pts</span>{" "}
+            <span className="text-mist">= H2H points (3 win / 1 draw / 0 loss + 1.5 bye).</span>{" "}
+            <span className="font-semibold">PD</span>{" "}
+            <span className="text-mist">= aggregate FPL margin across matches (PG − PL). Rank: Pts → PD → Wins.</span>
+          </p>
+        </div>
+        <StandingsTable rows={standings.standings} showRecord showDiff />
       </section>
 
       <ArchiveLink to="/h2h/past" label="Browse past H2H gameweeks" />

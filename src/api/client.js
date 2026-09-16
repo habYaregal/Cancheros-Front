@@ -122,6 +122,11 @@ export async function getMe() {
   return data;
 }
 
+export async function getRegisteredMembers() {
+  const { data } = await api.get("/auth/members");
+  return data.members;
+}
+
 export async function registerWithFpl(fplId) {
   const { data } = await api.post("/auth/register", { fplId });
   return data;

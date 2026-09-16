@@ -1,4 +1,17 @@
+import { useState } from "react";
 import { useProfile } from "../contexts/ProfileContext";
+
+function formatDiff(value) {
+  const diff = Number(value) || 0;
+  return diff > 0 ? `+${diff}` : `${diff}`;
+}
+
+function diffClass(value) {
+  const diff = Number(value) || 0;
+  if (diff > 0) return "text-lime";
+  if (diff < 0) return "text-red-300";
+  return "text-mist";
+}
 
 export function LoadingBlock({ label = "Loading…" }) {
   return (
@@ -29,62 +42,39 @@ export function SectionTitle({ title, subtitle }) {
   );
 }
 
-export function StandingsTable({ rows, pointsKey = "points", showRecord = false }) {
+export function StandingsTable({
+  rows,
+  pointsKey = "points",
+  showRecord = false,
+  showDiff = false,
+}) {
   const { memberId } = useProfile();
+  const [mobileExpanded, setMobileExpanded] = useState(false);
 
   if (!rows?.length) {
     return <p className="text-sm text-muted">No results yet.</p>;
   }
 
   return (
-    <>
-      {/* Mobile cards */}
-      <div className="space-y-2 sm:hidden">
-        {rows.map((row, index) => {
-          const isMe = memberId && row.memberId === memberId;
-          return (
-          <div
-            key={row.memberId || row.fplId || index}
-            className={[
-              "flex items-center justify-between gap-3 border bg-panel px-3 py-3",
-              isMe ? "border-lime/60 bg-lime/10" : "border-line",
-            ].join(" ")}
-          >
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="w-5 shrink-0 tabular-nums text-muted">
-                {row.position ?? index + 1}
-              </span>
-              <div className="min-w-0">
-                <p className="truncate font-semibold text-sand">
-                  {row.firstName} {row.lastName}
-                  {isMe ? (
-                    <span className="ml-2 text-[10px] font-bold uppercase tracking-wider text-lime">
-                      You
-                    </span>
-                  ) : null}
-                </p>
-                <p className="truncate text-xs text-muted">{row.teamName}</p>
-                {showRecord ? (
-                  <p className="mt-0.5 text-xs text-mist">
-                    P{row.played} W{row.wins} D{row.draws} L{row.losses}
-                  </p>
-                ) : null}
-              </div>
-            </div>
-            <span className="shrink-0 font-bold tabular-nums text-lime">
-              {row[pointsKey]}
-            </span>
-          </div>
-          );
-        })}
+    <div className="space-y-3">
+      {/* Mobile-only toggle */}
+      <div className="flex items-center justify-between sm:hidden">
+        <span />
+        <button
+          type="button"
+          onClick={() => setMobileExpanded((v) => !v)}
+          className="text-[11px] font-semibold uppercase tracking-[0.14em] text-lime hover:underline"
+        >
+          {mobileExpanded ? "Show less ▲" : "Show more ▼"}
+        </button>
       </div>
 
-      {/* Desktop table */}
-      <div className="hidden overflow-x-auto sm:block">
-        <table className="w-full min-w-[520px] border-collapse text-left text-sm">
+      <div className="overflow-x-auto">
+        {/* DESKTOP TABLE: full team column + all stat columns */}
+        <table className="hidden w-full min-w-[560px] border-collapse text-left text-sm sm:table">
           <thead>
             <tr className="border-b border-line text-xs uppercase tracking-[0.18em] text-muted">
-              <th className="py-3 pr-3 font-medium">#</th>
+              <th className="py-3 pr-2 font-medium">#</th>
               <th className="py-3 pr-3 font-medium">Manager</th>
               <th className="py-3 pr-3 font-medium">Team</th>
               {showRecord ? (
@@ -95,50 +85,175 @@ export function StandingsTable({ rows, pointsKey = "points", showRecord = false 
                   <th className="py-3 pr-3 font-medium">L</th>
                 </>
               ) : null}
-              <th className="py-3 text-right font-medium">Pts</th>
+              {showDiff ? (
+                <>
+                  <th className="py-3 pr-2 font-medium">PG</th>
+                  <th className="py-3 pr-2 font-medium">PL</th>
+                  <th className="py-3 pr-2 font-medium">PD</th>
+                </>
+              ) : null}
+              <th className="py-3 pr-0 text-right font-medium">Pts</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row, index) => {
               const isMe = memberId && row.memberId === memberId;
               return (
-              <tr
-                key={row.memberId || row.fplId || index}
-                className={[
-                  "border-b border-white/5 transition hover:bg-white/[0.03]",
-                  isMe ? "bg-lime/10" : "",
-                ].join(" ")}
-              >
-                <td className="py-3 pr-3 tabular-nums text-muted">
-                  {row.position ?? index + 1}
-                </td>
-                <td className="py-3 pr-3 font-semibold text-sand">
-                  {row.firstName} {row.lastName}
-                  {isMe ? (
-                    <span className="ml-2 text-[10px] font-bold uppercase tracking-wider text-lime">
-                      You
-                    </span>
+                <tr
+                  key={row.memberId || row.fplId || index}
+                  className={[
+                    "border-b border-white/5 transition hover:bg-white/[0.03]",
+                    isMe ? "bg-lime/10" : "",
+                  ].join(" ")}
+                >
+                  <td className="py-3 pr-2 tabular-nums text-muted">
+                    {row.position ?? index + 1}
+                  </td>
+                  <td className="py-3 pr-3 font-semibold text-sand">
+                    {row.firstName} {row.lastName}
+                    {isMe ? (
+                      <span className="ml-2 text-[10px] font-bold uppercase tracking-wider text-lime">
+                        You
+                      </span>
+                    ) : null}
+                  </td>
+                  <td className="py-3 pr-3 text-mist">{row.teamName}</td>
+                  {showRecord ? (
+                    <>
+                      <td className="py-3 pr-3 tabular-nums">{row.played}</td>
+                      <td className="py-3 pr-3 tabular-nums">{row.wins}</td>
+                      <td className="py-3 pr-3 tabular-nums">{row.draws}</td>
+                      <td className="py-3 pr-3 tabular-nums">{row.losses}</td>
+                    </>
                   ) : null}
-                </td>
-                <td className="py-3 pr-3 text-mist">{row.teamName}</td>
-                {showRecord ? (
-                  <>
-                    <td className="py-3 pr-3 tabular-nums">{row.played}</td>
-                    <td className="py-3 pr-3 tabular-nums">{row.wins}</td>
-                    <td className="py-3 pr-3 tabular-nums">{row.draws}</td>
-                    <td className="py-3 pr-3 tabular-nums">{row.losses}</td>
-                  </>
-                ) : null}
-                <td className="py-3 text-right font-bold tabular-nums text-lime">
-                  {row[pointsKey]}
-                </td>
-              </tr>
+                  {showDiff ? (
+                    <>
+                      <td className="py-3 pr-2 tabular-nums">
+                        {row.pointsGained ?? 0}
+                      </td>
+                      <td className="py-3 pr-2 tabular-nums">
+                        {row.pointsLost ?? 0}
+                      </td>
+                      <td
+                        className={`py-3 pr-2 tabular-nums font-semibold ${diffClass(
+                          row.pointsDifference
+                        )}`}
+                      >
+                        {formatDiff(row.pointsDifference)}
+                      </td>
+                    </>
+                  ) : null}
+                  <td className="py-3 pr-0 text-right font-bold tabular-nums text-lime">
+                    {row[pointsKey]}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+
+        {/* MOBILE TABLE: team below manager + conditional stat columns */}
+        <table className="w-full min-w-[320px] border-collapse text-left text-xs sm:hidden">
+          <thead>
+            <tr className="border-b border-line text-[10px] uppercase tracking-[0.18em] text-muted">
+              <th className="py-2 pr-2 font-medium">#</th>
+              <th className="py-2 pr-3 text-left font-medium">Manager</th>
+              {showRecord ? (
+                <th className="py-2 pr-2 font-medium">P</th>
+              ) : null}
+              {mobileExpanded && showRecord ? (
+                <>
+                  <th className="py-2 pr-2 font-medium">W</th>
+                  <th className="py-2 pr-2 font-medium">D</th>
+                  <th className="py-2 pr-2 font-medium">L</th>
+                </>
+              ) : null}
+              {mobileExpanded && showDiff ? (
+                <>
+                  <th className="py-2 pr-2 font-medium">PG</th>
+                  <th className="py-2 pr-2 font-medium">PL</th>
+                </>
+              ) : null}
+              {showDiff ? (
+                <th className="py-2 pr-2 font-medium">PD</th>
+              ) : null}
+              <th className="py-2 pr-0 text-right font-medium">Pts</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, index) => {
+              const isMe = memberId && row.memberId === memberId;
+              return (
+                <tr
+                  key={row.memberId || row.fplId || index}
+                  className={[
+                    "border-b border-white/5 transition hover:bg-white/[0.03]",
+                    isMe ? "bg-lime/10" : "",
+                  ].join(" ")}
+                >
+                  <td className="py-2 pr-2 align-top tabular-nums text-muted">
+                    {row.position ?? index + 1}
+                  </td>
+                  <td className="py-2 pr-3 align-top">
+                    <p className="font-semibold leading-tight text-sand">
+                      {row.firstName} {row.lastName}
+                      {isMe ? (
+                        <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wider text-lime">
+                          You
+                        </span>
+                      ) : null}
+                    </p>
+                    <p className="text-[10px] leading-tight text-muted">
+                      {row.teamName}
+                    </p>
+                  </td>
+                  {showRecord ? (
+                    <td className="py-2 pr-2 align-top tabular-nums">
+                      {row.played}
+                    </td>
+                  ) : null}
+                  {mobileExpanded && showRecord ? (
+                    <>
+                      <td className="py-2 pr-2 align-top tabular-nums">
+                        {row.wins}
+                      </td>
+                      <td className="py-2 pr-2 align-top tabular-nums">
+                        {row.draws}
+                      </td>
+                      <td className="py-2 pr-2 align-top tabular-nums">
+                        {row.losses}
+                      </td>
+                    </>
+                  ) : null}
+                  {mobileExpanded && showDiff ? (
+                    <>
+                      <td className="py-2 pr-2 align-top tabular-nums">
+                        {row.pointsGained ?? 0}
+                      </td>
+                      <td className="py-2 pr-2 align-top tabular-nums">
+                        {row.pointsLost ?? 0}
+                      </td>
+                    </>
+                  ) : null}
+                  {showDiff ? (
+                    <td
+                      className={`py-2 pr-2 align-top tabular-nums font-semibold ${diffClass(
+                        row.pointsDifference
+                      )}`}
+                    >
+                      {formatDiff(row.pointsDifference)}
+                    </td>
+                  ) : null}
+                  <td className="py-2 pr-0 align-top text-right font-bold tabular-nums text-lime">
+                    {row[pointsKey]}
+                  </td>
+                </tr>
               );
             })}
           </tbody>
         </table>
       </div>
-    </>
+    </div>
   );
 }
 
