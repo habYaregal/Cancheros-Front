@@ -97,7 +97,7 @@ export default function ProfilePage() {
           value={snapshot?.h2h ? `#${snapshot.h2h.position}` : "—"}
           detail={
             snapshot?.h2h
-              ? `${formatPoints(snapshot.h2h.points)} pts · ${snapshot.h2h.wins}W ${snapshot.h2h.draws}D ${snapshot.h2h.losses}L`
+              ? `${formatPoints(snapshot.h2h.points)} pts · PD ${snapshot.h2h.points_difference >= 0 ? "+" : ""}${snapshot.h2h.points_difference} · ${snapshot.h2h.wins}W ${snapshot.h2h.draws}D ${snapshot.h2h.losses}L`
               : "No fixtures yet"
           }
         />
